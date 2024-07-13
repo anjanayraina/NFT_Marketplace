@@ -102,10 +102,10 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         "122dab9670c21ad538dafdbb87191c4d7114c389af616c42c545123123asd231";
 
     IERC20 public token_contract_addr =
-        IERC20(0xc99bb5E1d9C3C4B0D4D2Da86296E73C2097c6Df2);
+        IERC20(0xc99bb5E1d9C3C4B0D4D2Da86296E73C2097c6Df2); // @audit GO make it constant 
 
     address public feeRecipient = 0xeC65818Ff0F8b071e587A0bBDBecC94DE739B6Ec; // Set the recipient address for the 10% fee
-    uint8 public feePercentage = 10; // 10% fee
+    uint8 public feePercentage = 10; // @audit GO make it constant 
 
     constructor() ERC721("KenduChad", "KenduChad") {}
 

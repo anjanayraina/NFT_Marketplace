@@ -165,6 +165,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
 
     address public platformFeeRecipient =
         0xeC65818Ff0F8b071e587A0bBDBecC94DE739B6Ec; // Set the recipient address for the 10% fee
+    // @audit LR the documentation suggests 2.5% fee whereas in the code the fee is 5%  
     uint8 public platformFeePercentage = 5; // 5% fee
     uint8 public nftHoldersShareOnPlatformFee = 50; // 50% fee share to NFT holders
 
@@ -242,7 +243,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
 
     /* Allows the owner of a KenduChads to stop offering it for sale */
     function chadNoLongerForSale(uint chadIndex) public nonReentrant {
-        if (chadIndex >= 10000) revert("token index not valid");
+        if (chadIndex >= 10000) revert("token index not valid"); // @audit GO consider using custom reverts for saving gas 
         if (chadsContract.ownerOf(chadIndex) != msg.sender)
             revert("you are not the owner of this token");
         chadsOfferedForSale[chadIndex] = Offer(
@@ -299,6 +300,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         if (!offer.isForSale) revert("chad is not for sale"); // chad not actually for sale
         if (offer.onlySellTo != address(0x0) && offer.onlySellTo != msg.sender)
             revert();
+        
         if (msg.value != offer.minValue) revert("not enough ether"); // Didn't send enough ETH
         address seller = offer.seller;
         if (seller == msg.sender) revert("seller == msg.sender");
@@ -393,6 +395,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
     }
 
     /* Allows bidders to withdraw their bids */
+    // @audit-info can allow for a DOS on the bid where someone can bid and immediately unbid to keep the other bids from not gettig cleared 
     function withdrawBidForChad(uint chadIndex) public nonReentrant {
         if (chadIndex >= 10000) revert("token index not valid");
         Bid memory bid = chadBids[chadIndex];
@@ -410,7 +413,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         uint256 feeToPlatform = fee - feeToHolders;
 
         // transfer to platform fee recipient
-        payable(platformFeeRecipient).transfer(feeToPlatform);
+        payable(platformFeeRecipient).transfer(feeToPlatform); // @audit Med use call instead of transfer 
 
         // transfer to all the holders
         uint256 totalNFTs = chadsContract.totalSupply();
