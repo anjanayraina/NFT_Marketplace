@@ -114,7 +114,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
 
     uint256 public constant MAX_MINTABLE_AT_ONCE = 4; // max 4 mint at once
 
-    uint256[10] private _availableTokens;
+    uint256[10] private _availableTokens; // @audit LR avoid hardcodin the the token ID ranges as it limits scalibility and slexibility 
     uint256 private _numAvailableTokens = 10;
     uint256 private _numFreeRollsGiven = 0;
 
@@ -126,6 +126,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         return 10; // @audit High in the docs its written that 10k nft will be minted whereeas in the code its only 10 
     }
 
+// @audit LR The name freeRollMint could be misleading if users assume it is free. It is better to name it something like mintWithFreeRoll
     function freeRollMint() public nonReentrant {
         uint256 toMint = freeRollkenduChads[msg.sender];
         freeRollkenduChads[msg.sender] = 0;
@@ -199,7 +200,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         uint256 updatedNumAvailableTokens = _numAvailableTokens;
         for (uint256 i = 0; i < _numToMint; i++) { // @audit GO can improve the for loop for gas optimizations 
             uint256 newTokenId = useRandomAvailableToken(_numToMint, i);
-            _safeMint(msg.sender, newTokenId);
+            _safeMint(msg.sender, newTokenId);// @audit GO can cachce msg.sender
             updatedNumAvailableTokens--;
         }
         _numAvailableTokens = updatedNumAvailableTokens;
@@ -272,7 +273,8 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
             totalSupply() + _numToMint <= numTotalkenduChads(),
             "There aren't this many kenduChads left."
         );
-        if (_numToMint >= 1 && _numToMint <= 10) {
+        if (_numToMint >= 1 && _numToMint <= 10) { // @audit LR the check is wrong according to the documentation 
+            //@audit High the calculation is wrong as its writtn that 5 milliton Kendu is needed for minting one NFT  
             return 10_000 * _numToMint * 10 ** 18; // 10K Kendu Tokens equivalent in tokens per nft upto 10 nfts, adjust based on token decimals
         } else {
             revert("Unsupported mint amount");
@@ -288,7 +290,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         } else {
             uint256[] memory result = new uint256[](numkenduChads);
             for (uint256 i = 0; i < numkenduChads; i++) {
-                result[i] = tokenOfOwnerByIndex(_owner, i);
+                result[i] = tokenOfOwnerByIndex(_owner, i); // @audit LR no function like that here 
             }
             return result;
         }

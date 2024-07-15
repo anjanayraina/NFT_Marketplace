@@ -166,7 +166,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
 
     address public platformFeeRecipient =
         0xeC65818Ff0F8b071e587A0bBDBecC94DE739B6Ec; // Set the recipient address for the 10% fee
-    // @audit LR the documentation suggests 2.5% fee whereas in the code the fee is 5%  
+    // @audit High the documentation suggests 2.5% fee whereas in the code the fee is 5%  
     uint8 public platformFeePercentage = 5; // 5% fee
     uint8 public nftHoldersShareOnPlatformFee = 50; // 50% fee share to NFT holders
 
