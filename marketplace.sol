@@ -160,6 +160,7 @@ abstract contract Ownable is Context {
     }
 }
 
+// @audit Med centralization risk 
 contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
     IERC721Enumerable chadsContract; // instance of the KenduChads NFT contract
 
@@ -178,7 +179,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
     }
 
     struct Bid {
-        bool hasBid;
+        bool hasBid; // @audit GO no need in keeping this variable in the struct as its not being used 
         uint chadIndex;
         address bidder;
         uint value;
@@ -219,6 +220,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
     /* Initializes contract with an instance of KenduChads contract, and sets deployer as owner */
     constructor(address initialChadsAddress) {
         // this line does not store or use the result, it serves as a verification step to ensure that the initialChadsAddress is a valid contract that implements the IERC721 interface. If initialChadsAddress does not support IERC721, this call will revert and the constructor will fail.
+        
         IERC721Enumerable(initialChadsAddress).balanceOf(address(this));
         chadsContract = IERC721Enumerable(initialChadsAddress);
     }
@@ -252,7 +254,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
             msg.sender,
             0,
             address(0x0)
-        );
+        ); //@audit GO much better if we just do chadsOfferedForSale[chadIndex].isForSale = falsel 
         emit ChadNoLongerForSale(chadIndex);
     }
 
@@ -262,7 +264,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         uint minSalePriceInWei
     ) public whenNotPaused nonReentrant {
         if (chadIndex >= 10000) revert("token index not valid");
-        if (chadsContract.ownerOf(chadIndex) != msg.sender)
+        if (chadsContract.ownerOf(chadIndex) != msg.sender) // @audit LR best practice is creating a modifier for these checks 
             revert("you are not the owner of this token");
         chadsOfferedForSale[chadIndex] = Offer(
             true,
@@ -300,7 +302,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         if (!offer.isForSale) revert("chad is not for sale"); // chad not actually for sale
         if (offer.onlySellTo != address(0x0) && offer.onlySellTo != msg.sender)
             revert();
-        
+        // @audit LR make it msg.value >= offer.minValue 
         if (msg.value != offer.minValue) revert("not enough ether"); // Didn't send enough ETH
         address seller = offer.seller;
         if (seller == msg.sender) revert("seller == msg.sender");
@@ -339,7 +341,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
         pendingWithdrawals[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
+        payable(msg.sender).transfer(amount); // @audit Med use call instead of transfer 
     }
 
     /* Allows users to enter bids for any KenduChad */
@@ -420,7 +422,7 @@ contract KenduChadMarketplace is ReentrancyGuard, Pausable, Ownable {
         uint256 amountPerHolder = feeToHolders / totalNFTs;
 
         if (amountPerHolder > 0) {
-            for (uint256 index = 0; index < totalNFTs; index++) {
+            for (uint256 index = 0; index < totalNFTs; index++) { // @audit GO the for loop can be optimized 
                 address holder = chadsContract.ownerOf(
                     chadsContract.tokenByIndex(index)
                 );

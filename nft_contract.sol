@@ -123,7 +123,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
     uint256 private _lastTokenIdMintedInInitialSet = 10;
 
     function numTotalkenduChads() public view virtual returns (uint256) {
-        return 10;
+        return 10; // @audit High in the docs its written that 10k nft will be minted whereeas in the code its only 10 
     }
 
     function freeRollMint() public nonReentrant {
@@ -155,6 +155,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         uint256 feeRecipientAmount = _calculateFee(costForMintingkenduChads);
 
         // Check allowance
+        // @audit LR these checks are not needed as the transfer will fail if these checks are not met 
         uint256 allowance = token_contract_addr.allowance(
             msg.sender,
             address(this)
@@ -176,7 +177,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
                 costForMintingkenduChads
             ),
             "Token transfer failed"
-        );
+        ); // @audit LR consider using safeTransferFrom 
 
         // Transfer 10% to the fee recipient from contract
         require(
@@ -196,7 +197,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         );
 
         uint256 updatedNumAvailableTokens = _numAvailableTokens;
-        for (uint256 i = 0; i < _numToMint; i++) {
+        for (uint256 i = 0; i < _numToMint; i++) { // @audit GO can improve the for loop for gas optimizations 
             uint256 newTokenId = useRandomAvailableToken(_numToMint, i);
             _safeMint(msg.sender, newTokenId);
             updatedNumAvailableTokens--;
@@ -309,7 +310,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
     ) public view override returns (string memory) {
         string memory base = _baseURI();
         string memory _tokenURI = string(
-            abi.encodePacked(Strings.toString(_tokenId), ".png")
+            abi.encodePacked(Strings.toString(_tokenId), ".png") 
         );
 
         // If there is no base URI, return the token URI.
@@ -367,7 +368,7 @@ contract KenduChad is Ownable, ERC721Enumerable, ReentrancyGuard {
         );
 
         // light check to make sure the proper values are being passed
-        require(numOfFreeRolls[0] <= 3, "cannot give more than 3 free rolls");
+        require(numOfFreeRolls[0] <= 3, "cannot give more than 3 free rolls"); // @audit LR check is wrong , this should be in the loop checking for every ith index 
 
         for (uint256 i = 0; i < tokenOwners.length; i++) {
             freeRollkenduChads[tokenOwners[i]] = numOfFreeRolls[i];
